@@ -1,7 +1,19 @@
 const express = require('express');
 const app = express();
+
 const path = require('path');
 const PORT = process.env.PORT || 3000;
+
+const { FRONTEND_URL, BACKEND_URL } = require('./config/config.js');
+
+
+
+const cors = require('cors');
+app.use(cors({
+  origin: FRONTEND_URL,
+  credentials: true
+}));
+
 const mysql = require('mysql2');
 
 app.use(express.json());
@@ -9,31 +21,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-const login = require('./auth/auth.js');
-app.use('/auth', login);
 
 
-// SQL connection setup - currently commented as no database is used
-// console.log("try to connect mysql");
-// const connection = mysql.createConnection({
-//     host: 'localhost',
-//     user: 'root',
-//     password: 'password',
-//     database: 'pointSys'
-// });
+// for login related issues, please check ./auth/
+const auth = require('./auth/auth.js');
+app.use('/auth', auth);
 
-// connection.connect((err) => {
-//     if (err) throw err;
-//     console.log('Connected to MySQL database!');
-// });
-
-
-app.get('/pointsys', (req, res) => {
-    connection.query('SELECT * FROM users', (err, results) => {
-        if (err) throw err;
-        res.render('pointSys', { users: results });
-    });
-});
+// for database related issues, please check ./database/
+const database = require('./database/database.js');
+app.use('/database', database);
 
 app.listen(PORT, () => {
     console.log(`Backend running at http://localhost:${PORT}`);
