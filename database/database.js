@@ -4,7 +4,7 @@ const router = express.Router();
 const pkg = require('pg')
 router.use(express.static(path.join(__dirname, '../public'))); // for asset if want to render ejs
 
-const { DB_CONFIG } = require('../config/config.js');
+const { DB_CONFIG, FRONTEND_URL } = require('../config/config.js');
 
 const { Pool } = pkg; // extract Pool from pg package
 const pool = new Pool(DB_CONFIG);
@@ -42,14 +42,16 @@ router.get('/pointSys', async (req, res) => {
 
 // update
 router.post('/updatePoints', async (req, res) => {
-    const { name, unique_name, addpoints } = req.body;
-    const originalPoints = await query('SELECT point FROM users WHERE unique_name = $1', [unique_name]).then(rows => rows[0] ? rows[0].point : null);
-    if (originalPoints === null) {
-        return res.status(404).json({ error: 'User not found' });
-    }
-    const points = originalPoints + addpoints;
-    await query('UPDATE users SET point = $1 WHERE unique_name = $2', [points, unique_name]);
-    res.json({ name, unique_name, points });
+    const body = req.body;
+    console.log(body);
+    res.redirect(FRONTEND_URL + 'ui/login/redirection.html');
+    // const originalPoints = await query('SELECT point FROM users WHERE unique_name = $1', [unique_name]).then(rows => rows[0] ? rows[0].point : null);
+    // if (originalPoints === null) {
+    //     return res.status(404).json({ error: 'User not found' });
+    // }
+    // const points = originalPoints + addpoints;
+    // await query('UPDATE users SET point = $1 WHERE unique_name = $2', [points, unique_name]);
+    // res.json({ name, unique_name, points });
 });
 
 module.exports = router;

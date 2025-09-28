@@ -16,11 +16,13 @@ app.use(cors({
 
 const mysql = require('mysql2');
 
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.use(express.json()); // for parsing application/json
+app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
+// Not using ejs for now
+// app.use(express.static(path.join(__dirname, 'public')));
+// app.set('view engine', 'ejs');
+// app.set('views', path.join(__dirname, 'views'));
 
 
 // for login related issues, please check ./auth/

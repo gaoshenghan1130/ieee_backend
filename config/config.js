@@ -17,6 +17,9 @@ const DEPLOYED_BACKEND_URL = "https://en-pt5n.onrender.com";
 const FRONTEND_URL = USING_LOCAL_FRONTEND ? LOCAL_FRONTEND_URL : (RELEASE_MODE ? DEPLOYED_FRONTEND_URL : TEST_FRONTEND_URL);
 const BACKEND_URL = RELEASE_MODE ? DEPLOYED_BACKEND_URL : LOCAL_BACKEND_URL;
 
+const MAINTAINER = "Gao Shenghan";
+const MAINTAINER_EMAIL = "shenghan@umich.edu";
+
 const DB_CONFIG = {
   user: "ieee_pointsys_user",
   host: "dpg-d3bmorj7mgec739rfmo0-a.oregon-postgres.render.com",
@@ -29,5 +32,7 @@ const DB_CONFIG = {
 module.exports = {
     FRONTEND_URL,
     BACKEND_URL,
-    DB_CONFIG 
+    DB_CONFIG,
+    MAINTAINER,
+    MAINTAINER_EMAIL
 };
