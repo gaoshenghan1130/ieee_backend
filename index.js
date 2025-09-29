@@ -6,8 +6,6 @@ const PORT = process.env.PORT || 3000;
 
 const { FRONTEND_URL, BACKEND_URL } = require('./config/config.js');
 
-
-
 const cors = require('cors');
 app.use(cors({
   origin: FRONTEND_URL,
@@ -19,11 +17,11 @@ const mysql = require('mysql2');
 app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
-// Not using ejs for now
-// app.use(express.static(path.join(__dirname, 'public')));
-// app.set('view engine', 'ejs');
-// app.set('views', path.join(__dirname, 'views'));
-
+app.use(cors({ // CORS settings, allow requests only from the frontend URL： Note it does not prevent evil post attempts with backend tools like Postman
+    origin: FRONTEND_URL,
+    methods: ["GET", "POST"],
+    credentials: true
+}));
 
 // for login related issues, please check ./auth/
 const auth = require('./auth/auth.js');

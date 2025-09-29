@@ -1,3 +1,5 @@
+const env = require('dotenv')
+env.config();
 
 const RELEASE_MODE = false; // true for deployed version, false for local testing or development
 
@@ -19,15 +21,22 @@ const BACKEND_URL = RELEASE_MODE ? DEPLOYED_BACKEND_URL : LOCAL_BACKEND_URL;
 
 const MAINTAINER = "Gao Shenghan";
 const MAINTAINER_EMAIL = "shenghan@umich.edu";
+const MAINTAINER_GITHUB = "https://github.com/gaoshenghan1130";
+const MAINTAINER_ADMIN_USERNAME = "gsh";
 
 const DB_CONFIG = {
-  user: "ieee_pointsys_user",
-  host: "dpg-d3bmorj7mgec739rfmo0-a.oregon-postgres.render.com",
-  database: "ieee_pointsys",
-  password: "gypC1emMeC8TEPYlR9ldJwvDt9y2C0rw",
-  port: 5432,
-  ssl: { rejectUnauthorized: false },
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_DATABASE,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
+    ssl: { rejectUnauthorized: false },
 };
+
+if (!DB_CONFIG.user || !DB_CONFIG.host || !DB_CONFIG.database || !DB_CONFIG.password || !DB_CONFIG.port) {
+    console.error("Database configuration is incomplete. Please constact maintainer " + MAINTAINER + " through " + MAINTAINER_EMAIL + " for .env or remote variables setup.");
+    process.exit(1); // Exit the application with an error code
+}
 
 module.exports = {
     FRONTEND_URL,
