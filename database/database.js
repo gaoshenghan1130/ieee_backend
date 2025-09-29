@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const router = express.Router();
 const pkg = require('pg')
+const bcrypt = require('bcrypt');
 router.use(express.static(path.join(__dirname, '../public'))); // for asset if want to render ejs
 
 const { DB_CONFIG, FRONTEND_URL } = require('../config/config.js');
@@ -27,7 +28,8 @@ async function insertNew(tableName, unique_name, password, name) {
             await client.query('BEGIN');
             if (tableName === 'admins') {
                 insertText = 'INSERT INTO admins(username, password) VALUES($1, $2)';
-                insertValues = [unique_name, password];
+                const hashedPassword = await bcrypt.hash(password, 10);
+                insertValues = [unique_name, hashedPassword];
             } else {
                 insertText = 'INSERT INTO users(unique_name, name, point) VALUES($1, $2, $3)';
                 insertValues = [unique_name, name, 0]; // point = 0 at the beginning
