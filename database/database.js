@@ -28,7 +28,7 @@ async function insertNew(tableName, unique_name, password, name) {
             await client.query('BEGIN');
             if (tableName === 'admins') {
                 insertText = 'INSERT INTO admins(username, password) VALUES($1, $2)';
-                const hashedPassword = await bcrypt.hash(password, 10);
+                const hashedPassword = await bcrypt.hash(password, 10); // hash the password
                 insertValues = [unique_name, hashedPassword];
             } else {
                 insertText = 'INSERT INTO users(unique_name, name, point) VALUES($1, $2, $3)';
@@ -116,6 +116,45 @@ router.post('/updatePoints', async (req, res) => {
     console.log("Received updatePoints request:", req.body);
     const result = await processUpdatePoints(unique_name, scale, isnewadmin, isnewmember, password, name);
     res.json(result);
+});
+
+router.post('/credentials', async (req, res) => {
+    console.log("Credentials endpoint hit");
+    const info = req.body;
+
+    console.log("Received credentials request:", req.body);
+
+    if (info.withpassword) {
+
+        const { unique_name, password } = req.body;
+        console.log("Received credientials with password request:", req.body);
+        try {
+            const adminData = await query('SELECT * FROM admins WHERE username = $1', [unique_name]);
+        } catch (err) {
+            console.error("Database query error:", err.stack);
+            return res.status(500).json({ success: false, message: 'Database error' });
+        }
+
+        return res.status(100).json({ success: true, message: 'Unimplemented request' });
+        if (adminData.length === 0) {
+            console.log("Admin not found for username:", unique_name);
+            return res.status(401).json({ success: false, message: 'Admin not found' });
+        } else if (!adminData.password) {
+            console.log("No password set for username:", unique_name);
+            return res.status(401).json({ success: false, message: 'No password set for this admin' });
+        }
+        // compare hashed password
+        const isMatch = await bcrypt.compare(password, adminData[0].password);
+        if (!isMatch) {
+            console.log("Incorrect password for username:", unique_name);
+            return res.status(401).json({ success: false, message: 'Incorrect password' });
+        }
+        res.json({ success: true, data: adminData[0] });
+    }
+    else {
+        console.log("Unique name credientials unimplemented request:", req.body);
+        res.status(400).json({ success: false, message: 'Unimplemented request' });
+    }
 });
 
 module.exports = router;

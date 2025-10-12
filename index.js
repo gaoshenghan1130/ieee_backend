@@ -9,10 +9,12 @@ const { FRONTEND_URL, BACKEND_URL } = require('./config/config.js');
 const cors = require('cors');
 app.use(cors({
   origin: FRONTEND_URL,
+  originLogin: '${FRONTEND_URL}/ui/login/adminLogin.html',
   credentials: true
 }));
 
-const mysql = require('mysql2');
+console.log("Frontend URL:", FRONTEND_URL);
+console.log("Backend URL:", BACKEND_URL);
 
 app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
