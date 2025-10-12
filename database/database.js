@@ -5,8 +5,8 @@ const pkg = require('pg')
 const bcrypt = require('bcrypt');
 router.use(express.static(path.join(__dirname, '../public'))); // for asset if want to render ejs
 
-const { DB_CONFIG, FRONTEND_URL } = require('../config/config.js');
-const { table } = require('console');
+const { DB_CONFIG, FRONTEND_URL, RELEASE_MODE, SECRET_KEY } = require('../config/config.js');
+const { table, log } = require('console');
 
 const { Pool } = pkg; // extract Pool from pg package
 const pool = new Pool(DB_CONFIG);
@@ -102,6 +102,11 @@ async function processUpdatePoints(unique_name, scale, isnewadmin, isnewmember, 
     }
 }
 
+function signToken(payload) {
+    const jwt = require('jsonwebtoken');
+    return jwt.sign(payload, SECRET_KEY, { expiresIn: '2h' }); // token valid for 2 hours
+}
+
 
 // rank for all users and their points
 router.get('/pointSys', async (req, res) => {
@@ -118,6 +123,8 @@ router.post('/updatePoints', async (req, res) => {
     res.json(result);
 });
 
+
+// for verifying credentials
 router.post('/credentials', async (req, res) => {
     console.log("Credentials endpoint hit");
     const info = req.body;
@@ -138,22 +145,54 @@ router.post('/credentials', async (req, res) => {
             return res.status(401).json({ success: false, message: 'Admin not found' });
         }
 
-        if (!adminData[0].password) {
-            return res.json({ success: true, message: 'Password not set for this admin', data: adminData[0] });
+        if (adminData[0].password) { // if password do not exist, it means this is a Higher Admin, allow login without password
+            // compare hashed password
+            const isMatch = await bcrypt.compare(password, adminData[0].password);
+            if (!isMatch) {
+                console.log("Incorrect password for username:", unique_name);
+                return res.status(401).json({ success: false, message: 'Incorrect password' });
+            }
         }
-
-        // compare hashed password
-        const isMatch = await bcrypt.compare(password, adminData[0].password);
-        if (!isMatch) {
-            console.log("Incorrect password for username:", unique_name);
-            return res.status(401).json({ success: false, message: 'Incorrect password' });
-        }
-        res.json({ success: true, data: adminData[0] });
+        // generate token
+        const token = signToken({
+            username: unique_name,
+            isAdmin: true, name: adminData[0].name,
+            RELEASE_MODE
+        });
+        res.cookie('token', token, {
+            httpOnly: true, // prevent XSS
+            secure: true, // using HTTPS in release mode, so set secure to true
+            sameSite: 'None', // allow cross-site cookies
+            maxAge: 2 * 60 * 60 * 1000 // 2 hours
+        });
+        console.log("Admin logged in successfully:", unique_name);
+        console.log("Generated token:", token);
+        res.json({ success: true });
     }
     else {
         console.log("Unique name credientials unimplemented request:", req.body);
         res.status(400).json({ success: false, message: 'Unimplemented request' });
     }
+});
+
+
+// for verifying token validity
+router.get('/verifyToken', (req, res) => {
+    const token = req.cookies.token;
+    console.log(req.cookies);
+    console.log("Verifying token:", token);
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'No token provided' });
+    }
+    const jwt = require('jsonwebtoken');
+    jwt.verify(token, SECRET_KEY, (err, decoded) => {
+        if (err) {
+            console.error("Token verification error:", err);
+            return res.status(401).json({ success: false, message: 'Invalid token' });
+        }
+        console.log("Token verified successfully:", decoded);
+        res.json({ success: true, decoded, loggedIn: true });
+    });
 });
 
 module.exports = router;

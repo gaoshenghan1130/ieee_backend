@@ -6,24 +6,19 @@ const PORT = process.env.PORT || 3000;
 
 const { FRONTEND_URL, BACKEND_URL } = require('./config/config.js');
 
+//secure cookies and CORS settings
 const cors = require('cors');
 app.use(cors({
   origin: FRONTEND_URL,
-  originLogin: '${FRONTEND_URL}/ui/login/adminLogin.html',
+  methods: ["GET", "POST"],
   credentials: true
 }));
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
 
-console.log("Frontend URL:", FRONTEND_URL);
-console.log("Backend URL:", BACKEND_URL);
-
+// structure
 app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
-
-app.use(cors({ // CORS settings, allow requests only from the frontend URL： Note it does not prevent evil post attempts with backend tools like Postman
-    origin: FRONTEND_URL,
-    methods: ["GET", "POST"],
-    credentials: true
-}));
 
 // for login related issues, please check ./auth/
 const auth = require('./auth/auth.js');
@@ -34,5 +29,5 @@ const database = require('./database/database.js');
 app.use('/database', database);
 
 app.listen(PORT, () => {
-    console.log(`Backend running at http://localhost:${PORT}`);
+  console.log(`Backend running at http://localhost:${PORT}`);
 });

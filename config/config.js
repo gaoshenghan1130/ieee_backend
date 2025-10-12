@@ -24,6 +24,10 @@ const MAINTAINER_EMAIL = "shenghan@umich.edu";
 const MAINTAINER_GITHUB = "https://github.com/gaoshenghan1130";
 const MAINTAINER_ADMIN_USERNAME = "gsh";
 
+// tokens for authentication
+const SECRET_KEY = process.env.SECRET_KEY
+
+// Database configuration
 const DB_CONFIG = {
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
@@ -39,9 +43,11 @@ if (!DB_CONFIG.user || !DB_CONFIG.host || !DB_CONFIG.database || !DB_CONFIG.pass
 }
 
 module.exports = {
+    RELEASE_MODE,
     FRONTEND_URL,
     BACKEND_URL,
     DB_CONFIG,
+    SECRET_KEY,
     MAINTAINER,
     MAINTAINER_EMAIL
 };
