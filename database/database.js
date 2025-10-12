@@ -27,9 +27,9 @@ async function insertNew(tableName, unique_name, password, name) {
         try {
             await client.query('BEGIN');
             if (tableName === 'admins') {
-                insertText = 'INSERT INTO admins(username, password) VALUES($1, $2)';
+                insertText = 'INSERT INTO admins(username, name, password) VALUES($1, $2, $3)';
                 const hashedPassword = await bcrypt.hash(password, 10); // hash the password
-                insertValues = [unique_name, hashedPassword];
+                insertValues = [unique_name, name, hashedPassword];
             } else {
                 insertText = 'INSERT INTO users(unique_name, name, point) VALUES($1, $2, $3)';
                 insertValues = [unique_name, name, 0]; // point = 0 at the beginning
@@ -126,23 +126,22 @@ router.post('/credentials', async (req, res) => {
 
     if (info.withpassword) {
 
-        const { unique_name, password } = req.body;
+        const { username, password } = req.body;
+        const unique_name = username; // for admins, unique_name is username
         console.log("Received credientials with password request:", req.body);
-        try {
-            const adminData = await query('SELECT * FROM admins WHERE username = $1', [unique_name]);
-        } catch (err) {
-            console.error("Database query error:", err.stack);
-            return res.status(500).json({ success: false, message: 'Database error' });
-        }
 
-        return res.status(100).json({ success: true, message: 'Unimplemented request' });
+        const adminData = await query('SELECT * FROM admins WHERE username = $1', [unique_name]);
+        console.log("Admin data fetched from DB:", adminData);
+
         if (adminData.length === 0) {
             console.log("Admin not found for username:", unique_name);
             return res.status(401).json({ success: false, message: 'Admin not found' });
-        } else if (!adminData.password) {
-            console.log("No password set for username:", unique_name);
-            return res.status(401).json({ success: false, message: 'No password set for this admin' });
         }
+
+        if (!adminData[0].password) {
+            return res.json({ success: true, message: 'Password not set for this admin', data: adminData[0] });
+        }
+
         // compare hashed password
         const isMatch = await bcrypt.compare(password, adminData[0].password);
         if (!isMatch) {
