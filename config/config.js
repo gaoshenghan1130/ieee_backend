@@ -14,17 +14,34 @@ const DEPLOYED_FRONTEND_URL = "https://ieee.eecs.umich.edu";
 const LOCAL_BACKEND_URL = "http://localhost:3000";
 const DEPLOYED_BACKEND_URL = "https://en-pt5n.onrender.com";
 
-
 const FRONTEND_URL = USING_LOCAL_FRONTEND ? LOCAL_FRONTEND_URL : (RELEASE_MODE ? DEPLOYED_FRONTEND_URL : TEST_FRONTEND_URL);
-const BACKEND_URL = RELEASE_MODE ? DEPLOYED_BACKEND_URL : LOCAL_BACKEND_URL;
+const BACKEND_URL = USING_LOCAL_FRONTEND ? LOCAL_BACKEND_URL : DEPLOYED_BACKEND_URL;
 
 const MAINTAINER = "Gao Shenghan";
 const MAINTAINER_EMAIL = "shenghan@umich.edu";
 const MAINTAINER_GITHUB = "https://github.com/gaoshenghan1130";
 const MAINTAINER_ADMIN_USERNAME = "gsh";
 
-console.log("Maintainer:", MAINTAINER, MAINTAINER_EMAIL, MAINTAINER_GITHUB, MAINTAINER_ADMIN_USERNAME);
+console.log("");
+console.log("");
+console.log("----------------------------------");
+console.log("==== Application Information ====");
+console.log("Maintainer:", MAINTAINER);
+console.log("Contact:", MAINTAINER_EMAIL);
+console.log("GitHub:", MAINTAINER_GITHUB);
 console.log("Release mode:", RELEASE_MODE ? "Deployed" : "Development/Testing");
+console.log("----------------------------------");
+console.log("");
+console.log("");
+console.log("----------------------------------");
+console.log("==== Configuration Summary ====");
+console.log("Frontend URL:", FRONTEND_URL);
+console.log("Backend URL:", BACKEND_URL);
+console.log("Using local frontend:", USING_LOCAL_FRONTEND);
+console.log("----------------------------------");
+console.log("");
+console.log("");
+
 
 // tokens for authentication
 const SECRET_KEY = process.env.SECRET_KEY
@@ -39,7 +56,7 @@ const DB_CONFIG = {
     ssl: { rejectUnauthorized: false },
 };
 
-if (!DB_CONFIG.user || !DB_CONFIG.host || !DB_CONFIG.database || !DB_CONFIG.password || !DB_CONFIG.port) {
+if (!DB_CONFIG.user || !DB_CONFIG.host || !DB_CONFIG.database || !DB_CONFIG.password || !DB_CONFIG.port || !SECRET_KEY) {
     console.error("Database configuration is incomplete. Please constact maintainer " + MAINTAINER + " through " + MAINTAINER_EMAIL + " for .env or remote variables setup.");
     process.exit(1); // Exit the application with an error code
 }
