@@ -3,7 +3,7 @@ env.config();
 
 const RELEASE_MODE = process.env.RELEASE_MODE == 1; // true for deployed version, false for local testing or development
 
-const USING_LOCAL_FRONTEND = true && !RELEASE_MODE; // true for local frontend, false for deployed frontend
+const USING_LOCAL_FRONTEND = process.env.USING_LOCAL_FRONTEND == 1 && !RELEASE_MODE; // true for local frontend, false for developer's testing web page
 
 // Frontend URLs
 const LOCAL_FRONTEND_URL = "http://127.0.0.1:5501";
