@@ -4,12 +4,12 @@ const app = express();
 const path = require('path');
 const PORT = process.env.PORT || 3000;
 
-const { FRONTEND_URL, BACKEND_URL } = require('./config/config.js');
+const { ALL_FROUNTEND_URLS, FRONTEND_URL, BACKEND_URL } = require('./config/config.js');
 
 //secure cookies and CORS settings
 const cors = require('cors');
 app.use(cors({
-  origin: FRONTEND_URL,
+  origin: ALL_FROUNTEND_URLS,
   methods: ["GET", "POST"],
   credentials: true
 }));

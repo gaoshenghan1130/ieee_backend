@@ -14,6 +14,8 @@ const DEPLOYED_FRONTEND_URL = "https://ieee.eecs.umich.edu";
 const LOCAL_BACKEND_URL = "http://localhost:3000";
 const DEPLOYED_BACKEND_URL = "https://en-pt5n.onrender.com";
 
+const ALL_FROUNTEND_URLS = [LOCAL_FRONTEND_URL, TEST_FRONTEND_URL, DEPLOYED_FRONTEND_URL, "https://gaoshenghan1130.github.io"]; // for CORS settings, allow requests from all these URLs
+
 const FRONTEND_URL = USING_LOCAL_FRONTEND ? LOCAL_FRONTEND_URL : (RELEASE_MODE ? DEPLOYED_FRONTEND_URL : TEST_FRONTEND_URL);
 const BACKEND_URL = USING_LOCAL_FRONTEND ? LOCAL_BACKEND_URL : DEPLOYED_BACKEND_URL;
 
@@ -65,6 +67,7 @@ module.exports = {
     RELEASE_MODE,
     FRONTEND_URL,
     BACKEND_URL,
+    ALL_FROUNTEND_URLS,
     DB_CONFIG,
     SECRET_KEY,
     MAINTAINER,
