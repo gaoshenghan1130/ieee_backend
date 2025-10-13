@@ -54,11 +54,13 @@ async function updatePoints(unique_name, scale) {
     // first get current points
     const userData = await query('SELECT point FROM users WHERE unique_name = $1', [unique_name]);
     if (userData.length === 0) {
-        return { success: false, error: 'User not found' };
+        console.log("User not found for unique_name:", unique_name);
+        throw new Error('User not found');
     }
     let currentPoints = userData[0].point;
     let newPoints = currentPoints + scale;
     if (newPoints < 0) newPoints = 0; // Bottom line at 0
+    console.log(`Updating points for ${unique_name}: currentPoints=${currentPoints}, scale=${scale}, newPoints=${newPoints}`);
 
     try {
         const client = await pool.connect();
@@ -72,13 +74,14 @@ async function updatePoints(unique_name, scale) {
         } catch (err) {
             await client.query('ROLLBACK');
             console.error("Transaction error:", err.stack);
-            return { success: false, error: err.message };
+            return { success: false, message: err.message };
         } finally {
+            console.log("Releasing client");
             client.release();
         }
     } catch (err) {
         console.error("Connection error:", err.stack);
-        return { success: false, error: err.message };
+        return { success: false, message: err.message };
     }
 }
 
@@ -94,11 +97,12 @@ async function processUpdatePoints(unique_name, scale, isnewadmin, isnewmember, 
             await insertNew('users', unique_name, password, name);
         }
 
+        console.log("Processing updatePoints for:", unique_name, scale, isnewadmin, isnewmember, password ? "with password" : "no password", name);
         ///////////// FOR POINTS UPDATE  /////////////
         return await updatePoints(unique_name, scale);
     } catch (err) {
         console.error("Connection error:", err.stack);
-        return { success: false, error: err.message };
+        return { success: false, message: err.message };
     }
 }
 
@@ -111,6 +115,7 @@ function signToken(payload) {
 // rank for all users and their points
 router.get('/pointSys', async (req, res) => {
     const usersdata = await query('SELECT * FROM users ORDER BY point DESC');
+    console.log("Fetched users data:", usersdata);
     res.json(usersdata);
 });
 
@@ -119,8 +124,14 @@ router.get('/pointSys', async (req, res) => {
 router.post('/updatePoints', async (req, res) => {
     const { unique_name, scale, isnewadmin, isnewmember, password, name } = req.body;
     console.log("Received updatePoints request:", req.body);
-    const result = await processUpdatePoints(unique_name, scale, isnewadmin, isnewmember, password, name);
-    res.json(result);
+    try {
+        const result = await processUpdatePoints(unique_name, scale, isnewadmin, isnewmember, password, name);
+        res.json(result);
+    } catch (err) {
+        return res.status(401).json({ success: false, message: err.message });
+    }
+
+
 });
 
 

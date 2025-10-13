@@ -1,8 +1,7 @@
 const env = require('dotenv')
 env.config();
 
-const RELEASE_MODE = false; // true for deployed version, false for local testing or development
-
+const RELEASE_MODE = process.env.RELEASE_MODE == 1; // true for deployed version, false for local testing or development
 
 const USING_LOCAL_FRONTEND = true && !RELEASE_MODE; // true for local frontend, false for deployed frontend
 
@@ -23,6 +22,9 @@ const MAINTAINER = "Gao Shenghan";
 const MAINTAINER_EMAIL = "shenghan@umich.edu";
 const MAINTAINER_GITHUB = "https://github.com/gaoshenghan1130";
 const MAINTAINER_ADMIN_USERNAME = "gsh";
+
+console.log("Maintainer:", MAINTAINER, MAINTAINER_EMAIL, MAINTAINER_GITHUB, MAINTAINER_ADMIN_USERNAME);
+console.log("Release mode:", RELEASE_MODE ? "Deployed" : "Development/Testing");
 
 // tokens for authentication
 const SECRET_KEY = process.env.SECRET_KEY
