@@ -19,6 +19,52 @@ It is designed to work together with the IEEE frontend hosted at
 Backend API is currently deployed at:
 - https://en-pt5n.onrender.com
 
+---
+
+## Structure Overview
+
+```mermaid
+flowchart LR
+    %% Define Sections
+    subgraph FRONTEND["Frontend"]
+        A1[Member Leaderboard Page]
+        A2[Admin Dashboard]
+    end
+
+    subgraph BACKEND["Backend API"]
+        B1["GET /pointSys<br/>Fetch leaderboard"]
+        B2["POST /updatePoints<br/>Update user score / add member"]
+        B3["POST /credentials<br/>Admin login (JWT cookie)"]
+        B4["GET /verifyToken<br/>Verify login status"]
+    end
+
+    subgraph DATABASE["PostgreSQL Database"]
+        D1["users<br/>── unique_name<br/>── name<br/>── point"]
+        D2["admins<br/>── username<br/>── name<br/>── password"]
+    end
+
+    %% Connections
+    A1 -->|Fetch scores| B1
+    A2 -->|Login| B3
+    A2 -->|Update points| B2
+    A2 -->|Verify token| B4
+
+    B1 --> D1
+    B2 --> D1
+    B2 --> D2
+    B3 --> D2
+    B4 --> D2
+
+    %% Styling
+    classDef frontend fill:#E3F2FD,stroke:#2196F3,color:#0D47A1,stroke-width:2px
+    classDef backend fill:#E8F5E9,stroke:#4CAF50,color:#1B5E20,stroke-width:2px
+    classDef database fill:#FFF3E0,stroke:#FB8C00,color:#E65100,stroke-width:2px
+
+    class FRONTEND frontend
+    class BACKEND backend
+    class DATABASE database
+```
+
 --- 
 
 ## Tech Stack
