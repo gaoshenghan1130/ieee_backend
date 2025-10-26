@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS admins (
 );
 
 INSERT INTO admins (username, name, password) VALUES
-    ('gsh', 'Gao Shenghan', 'hashed_password1');
+    ('gsh', 'Gao Shenghan', '');
 
 INSERT INTO users (unique_name, name, point) VALUES
     ('user1', 'Alice', 100),
