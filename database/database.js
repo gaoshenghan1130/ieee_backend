@@ -57,8 +57,8 @@ async function updatePoints(unique_name, scale) {
         console.log("User not found for unique_name:", unique_name);
         throw new Error('User not found');
     }
-    let currentPoints = userData[0].point;
-    let newPoints = currentPoints + scale;
+    let currentPoints = Number(userData[0].point);
+    let newPoints = currentPoints + Number(scale);
     if (newPoints < 0) newPoints = 0; // Bottom line at 0
     console.log(`Updating points for ${unique_name}: currentPoints=${currentPoints}, scale=${scale}, newPoints=${newPoints}`);
 
