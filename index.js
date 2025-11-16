@@ -7,12 +7,19 @@ const PORT = process.env.PORT || 3000;
 const { ALL_FROUNTEND_URLS, FRONTEND_URL, BACKEND_URL } = require('./config/config.js');
 
 //secure cookies and CORS settings
-const cors = require('cors');
 app.use(cors({
-  origin: ALL_FROUNTEND_URLS,
-  methods: ["GET", "POST"],
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // allow tools like Postman
+
+    if (ALL_FROUNTEND_URLS.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS: " + origin));
+  },
   credentials: true
 }));
+
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
