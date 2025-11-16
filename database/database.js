@@ -11,6 +11,9 @@ const { table, log } = require('console');
 const { Pool } = pkg; // extract Pool from pg package
 const pool = new Pool(DB_CONFIG);
 
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() }); // store file in memory
+
 async function query(sql, params = []) {
     try {
         const result = await pool.query(sql, params);
@@ -134,6 +137,101 @@ router.post('/updatePoints', async (req, res) => {
 
 });
 
+router.post('/generatePointsForm', async (req, res) => {
+  console.log("generatePointsForm endpoint hit");
+
+  try {
+    // Define CSV headers
+    const headers = ['unique_name', 'name', 'scale'];
+
+    // Optionally, add a few sample rows
+    const rows = [
+      ['testuser1', 'Alice Example', '10'],
+      ['testuser2', 'Bob Sample', '-5'],
+      ['testuser3', 'Charlie Demo (name is only for adding new users)', '0']
+    ];
+
+    // Join rows into CSV text
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+
+    // Set headers to trigger download
+    res.setHeader('Content-Disposition', 'attachment; filename="points_template.csv"');
+    res.setHeader('Content-Type', 'text/csv');
+
+    // Send CSV content
+    res.status(200).send(csvContent);
+  } catch (err) {
+    console.error("Error generating CSV:", err);
+    res.status(500).json({ success: false, message: 'Server error generating CSV' });
+  }
+});
+
+router.post('/updatePointsForm', upload.single('file'), async (req, res) => {
+    // using multer middleware to handle file upload
+
+
+    upload.single('file')(req, res, async function (err) {
+        if (err) {
+            console.error("Multer error:", err);
+            return res.status(500).json({ success: false, message: 'File upload error' });
+        }
+        if (!req.file) {
+            console.error("No file uploaded");
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
+        }
+
+        const csv = require('csv-parser');
+        const results = [];
+        const stream = require('stream');
+        const readStream = new stream.PassThrough();
+        readStream.end(req.file.buffer);
+
+        readStream.pipe(csv())
+            .on('data', (data) => results.push(data))
+            .on('end', async () => {
+                console.log("CSV file parsed:", results);
+                // process each row
+                for (const row of results) {
+                    const unique_name = row['unique_name'];
+                    const name = row['name'];
+                    const scale = Number(row['scale']);
+                    const userData = await querys('SELECT * FROM users WHERE unique_name = $1', [unique_name]);
+                    if (userData.length === 0) {
+                        console.log("User not found for unique_name:", unique_name);
+                        // add new user with 0 points
+                        insertNew('users', unique_name, null, name);
+                        // skip this row
+                        continue;
+                    }
+                    let currentPoints = Number(userData[0].point);
+                    let newPoints = currentPoints + scale;
+                    console.log(`Updating points for ${unique_name}: currentPoints=${currentPoints}, scale=${scale}, newPoints=${newPoints}`);
+
+                    try {
+                        const client = await pool.connect();
+                        try {
+                            await client.query('BEGIN');
+                            const updateText = 'UPDATE users SET point = $1 WHERE unique_name = $2';
+                            const updateValues = [newPoints, unique_name];
+                            await client.query(updateText, updateValues);
+                            await client.query('COMMIT');
+                            console.log(`Points updated successfully for ${unique_name}`);
+                        } catch (err) {
+                            await client.query('ROLLBACK');
+                            console.error("Transaction error:", err.stack);
+                        } finally {
+                            console.log("Releasing client");
+                            client.release();
+                        }
+                    } catch (err) {
+                        console.error("Connection error:", err.stack);
+                    }
+                }
+                res.json({ success: true, message: 'CSV processed successfully' });
+            });
+    });
+});
+
 
 // for verifying credentials
 router.post('/credentials', async (req, res) => {
@@ -193,13 +291,13 @@ router.get('/verifyToken', (req, res) => {
     console.log(req.cookies);
     console.log("Verifying token:", token);
     if (!token) {
-        return res.status(200).json({ success: false, message: 'No token provided', loggedIn: false });
+        return res.status(200).json({ success: false, message: 'No token provided', loggedIn: false , invalid: false});
     }
     const jwt = require('jsonwebtoken');
     jwt.verify(token, SECRET_KEY, (err, decoded) => {
         if (err) {
             console.error("Token verification error:", err);
-            return res.status(200).json({ success: false, message: 'Invalid token', loggedIn: false });
+            return res.status(200).json({ success: false, message: 'Invalid token', invalid: true, loggedIn: false });
         }
         console.log("Token verified successfully:", decoded);
         res.json({ success: true, decoded, loggedIn: true });
