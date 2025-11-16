@@ -141,24 +141,15 @@ router.post('/generatePointsForm', async (req, res) => {
   console.log("generatePointsForm endpoint hit");
 
   try {
-    // Define CSV headers
+    const users = await query('SELECT unique_name, name FROM users ORDER BY unique_name');
     const headers = ['unique_name', 'name', 'scale'];
+    const description = ['add new name if you want to add new user/deleting names will not result in deleting user', 'will only be updated while adding a new user', 'the change you want to apply to the user points / negative or positive'];
+    const rows = users.map(user => [user.unique_name, user.name, '0']);
+    const csvContent = [headers, description, ...rows].map(e => e.join(",")).join("\n");
 
-    // Optionally, add a few sample rows
-    const rows = [
-      ['testuser1', 'Alice Example', '10'],
-      ['testuser2', 'Bob Sample', '-5'],
-      ['testuser3', 'Charlie Demo (name is only for adding new users)', '0']
-    ];
-
-    // Join rows into CSV text
-    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-
-    // Set headers to trigger download
     res.setHeader('Content-Disposition', 'attachment; filename="points_template.csv"');
     res.setHeader('Content-Type', 'text/csv');
 
-    // Send CSV content
     res.status(200).send(csvContent);
   } catch (err) {
     console.error("Error generating CSV:", err);
@@ -166,10 +157,8 @@ router.post('/generatePointsForm', async (req, res) => {
   }
 });
 
-router.post('/updatePointsForm', upload.single('file'), async (req, res) => {
+router.post('/updatePointsForm', async (req, res) => {
     // using multer middleware to handle file upload
-
-
     upload.single('file')(req, res, async function (err) {
         if (err) {
             console.error("Multer error:", err);
@@ -195,12 +184,19 @@ router.post('/updatePointsForm', upload.single('file'), async (req, res) => {
                     const unique_name = row['unique_name'];
                     const name = row['name'];
                     const scale = Number(row['scale']);
-                    const userData = await querys('SELECT * FROM users WHERE unique_name = $1', [unique_name]);
+                    if (isNaN(scale)) {
+                        console.log(`Invalid scale for user ${unique_name} or description, skipping`);
+                        continue;
+                    }
+                    const userData = await query('SELECT * FROM users WHERE unique_name = $1', [unique_name]);
                     if (userData.length === 0) {
                         console.log("User not found for unique_name:", unique_name);
                         // add new user with 0 points
                         insertNew('users', unique_name, null, name);
-                        // skip this row
+                        const updateText = 'UPDATE users SET point = $1 WHERE unique_name = $2';
+                        const updateValues = [scale, unique_name];
+                        await pool.query(updateText, updateValues);
+                        console.log(`New user ${unique_name} added with initial points: ${scale}`);
                         continue;
                     }
                     let currentPoints = Number(userData[0].point);
