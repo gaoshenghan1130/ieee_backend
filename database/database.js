@@ -193,13 +193,13 @@ router.get('/verifyToken', (req, res) => {
     console.log(req.cookies);
     console.log("Verifying token:", token);
     if (!token) {
-        return res.status(401).json({ success: false, message: 'No token provided' });
+        return res.status(200).json({ success: false, message: 'No token provided', loggedIn: false });
     }
     const jwt = require('jsonwebtoken');
     jwt.verify(token, SECRET_KEY, (err, decoded) => {
         if (err) {
             console.error("Token verification error:", err);
-            return res.status(401).json({ success: false, message: 'Invalid token' });
+            return res.status(200).json({ success: false, message: 'Invalid token', loggedIn: false });
         }
         console.log("Token verified successfully:", decoded);
         res.json({ success: true, decoded, loggedIn: true });
